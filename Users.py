@@ -4,18 +4,16 @@ class Participant:
         self.stake = stake
         self.locked_stake = 0
         self.delegate = None
+        self.eligible_for_delegate = False  # Initialize as not eligible
 
     def lock_stake_for_delegate(self, amount):
         if self.stake >= amount:
             self.locked_stake = amount
-            self.stake -= amount
-        else:
-            print("Insufficient stake to lock.")
+            if self.locked_stake >= 50:
+                self.eligible_for_delegate = True  # Become eligible for delegate
 
     def vote_for_delegate(self, delegate):
-        if self.locked_stake > 0:
-            delegate.votes += self.locked_stake
-            self.locked_stake = 0
-            self.delegate = delegate
-        else:
-            print("You need to lock up stake to vote for a delegate.")
+        delegate.votes += self.locked_stake
+        self.stake -= self.locked_stake
+        self.locked_stake = 0
+        self.delegate = delegate
