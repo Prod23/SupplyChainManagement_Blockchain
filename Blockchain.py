@@ -1,21 +1,58 @@
+import hashlib
+from sys import displayhook
+import time
+import json
+import random
+from tkinter import Image
+import qrcode
+from merkleTree import MerkleTree
+
+
+
+
 class SupplyChainBlockchain:
     def __init__(self):
-        self.chain = []
+        self.chain = [] 
+        self.unverified_transactions = []
         self.current_transactions = []
-        self.nodes = set()
-        self.create_block("0",genesis_block= True)
-        self.participants = {}
+        self.transaction_history = dict()
+        
+        self.chain=[] #to store the chain
+
+        self.create_block("0",genesis_block= True) #genesis block, contains no transactions
+        
+        self.participants = dict()
+        
         self.deliveries_in_progress = {}
+        
         self.disputes = []
+        
         self.votes=[]
 
-    def participant(self, name, type_,id, amount):
-            self.participants[name] = { "type": type_, "amount": amount, "products": [] }
-            if type_ == "distributor":
+        self.delegates=dict()
+
+        self.stakers=dict()
+
+        self.witnesses=dict()
+
+    # def add_users(self,participants):
+    #     self.participants.update(participants)
+    #     print(self.participants)
+
+
+    def participant(self, participants):
+            # self.participants[name] = { "type": type_, "amount": amount, "products": [] }
+            # if type_ == "distributor":
+            #   # print(id[1])
+            #   # index=int(id[1])
+            #   self.votes.append({id:0})
               # print(id[1])
-              # index=int(id[1])
-              self.votes.append({id:0})
-              # print(id[1])
+        self.participants.update(participants)
+        print(self.participants)
+
+    def add_staker(self,stakers):
+        self.stakers.update(stakers)
+
 
     def create_block(self, previous_hash=None,genesis_block=False):
         if not genesis_block:
@@ -28,7 +65,7 @@ class SupplyChainBlockchain:
             'transactions': self.current_transactions,
             'validator': validator,  # The entity who added the block
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
-            'merkle_root': self.get_merkle_root(self.current_transactions),
+            'merkle_root': self.generate_merkle_root(self.current_transactions),
         }
         self.current_transactions = []
         self.chain.append(block)
@@ -47,9 +84,9 @@ class SupplyChainBlockchain:
         })
         return self.last_block['index'] + 1
 
-    def get_merkle_root(self, transactions):
+    def generate_merkle_root(self, transactions):
       mt=MerkleTree()
-      return mt.get_merkle_root()
+      return mt.generate_merkle_root()
 
 
     def generate_qr_code(self, transaction, file_path='qr_code.png'):
@@ -67,7 +104,7 @@ class SupplyChainBlockchain:
         img.save(file_path)  # Save the QR code as an image file
 
         # Display
-        display(Image(filename=file_path))
+        displayhook(Image(filename=file_path))
 
 
 
@@ -86,24 +123,34 @@ class SupplyChainBlockchain:
 
 
 
-    def dpos_consensus(self):
-      validators = [node for node in self.nodes if self.participants[node]['type'] == 'distributor']
-      if not validators:
-          raise ValueError("No validators available. Register a distributor node before creating a block.")
-      selected_validator = random.choice(validators)
-      return selected_validator
+    def dpos_vote(self):
+        self.stakers = self.participants
+        for participant, _ in self.stakers.items():
+            self.delegates[participant] = 0
+        for _, value in self.stakers.items():
+            candidate,_ = random.choice(list(self.stakers.items()))
+            length = len(value['product'])
+            x = length*random.randint(0, length)
+            self.delegates[candidate] += x  
+
+    def dpos_result(self):
+        print(self.delegates)
+        self.delegates = dict(sorted(self.delegates.items(), key = lambda kv: (kv[1], kv[0]), reverse=True))
+
+        self.witnesses = dict(list(self.delegates.items())[0:3])
+        print(self.witnesses)
 
 
     @staticmethod
     def hash(block):
-        transactions = block['transactions']
-        transactions.append(block['previous_hash'])
-        print(transactions)
-        mt = MerkleTree()
-        for transaction in transactions:
-            mt.add_leaf(transaction)
-        mt.make_tree()
-        return mt.get_merkle_root()
+            transactions = block['transactions']
+            transactions.append(block['previous_hash'])
+            print(transactions)
+            mt = MerkleTree()
+            for transaction in transactions:
+                mt.add_leaf(transaction)
+            mt.make_tree()
+            return mt.generate_merkle_root()
 
     @property
     def last_block(self):
