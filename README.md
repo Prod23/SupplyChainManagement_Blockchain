@@ -186,17 +186,18 @@ This generates the qrcode giving us the status of the transaction. Here's a samp
 <img  src="./Images/qr_code.png" width = 134px height = 134px>
 
 Generates the following message when scanned:
-``` 
+``` json
 {
-    'manufacturer': 'Manufacturer1', 'distributor': 'd2',
+    'manufacturer': 'Manufacturer1',
+    'distributor': 'd2',
     'client': 'Client1',
     'product': 'normal-chair',
-    'amount': 400,
+    'amount': 550,
     'timestamps':
           {
-            'received_by_distributor': 1696061718.8122292,
-            'dispatched': 1696061718.8122292,
-            'received_by_client': 1696061718.8122292
+              'received_by_distributor': '2023-09-30 17:33:04',
+              'dispatched': '2023-09-30 17:33:04',
+              'received_by_client': '2023-09-30 17:33:04'
           }
 }
 
