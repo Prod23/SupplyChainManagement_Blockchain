@@ -8,8 +8,6 @@ import qrcode
 from merkleTree import MerkleTree
 
 
-
-
 class SupplyChainBlockchain:
     def __init__(self):
         self.chain = [] 
@@ -55,6 +53,7 @@ class SupplyChainBlockchain:
 
 
     def create_block(self, previous_hash=None,genesis_block=False):
+        
         if not genesis_block:
           validator = self.dpos_consensus()  # Decide who gets to create the block
         else:
@@ -67,12 +66,46 @@ class SupplyChainBlockchain:
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
             'merkle_root': self.generate_merkle_root(self.current_transactions),
         }
-        self.current_transactions = []
-        self.chain.append(block)
-        return block
 
+        self.current_transactions = []
+        self.deliveries_in_progress=[]
+        self.chain.append(block)
+        self.unverified_transactions=[]
+        return block
+    
+    
+    def confirm_transactions(self):
+        last_block = self.last_block
+        transactions = last_block['transactions']
+
+        for tx in transactions:
+            d = tx['distributor']
+            c = tx['client']
+
+            if d in self.deliveries_in_progress and self.deliveries_in_progress[d] == c:
+                self.confirm_delivery(d, c)
+                
     def confirm_deivery(self,distributor, client):
         self.deliveries_in_progress.pop(distributor,None)
+
+    def generate_merkle_root(self, transactions):
+        mt = MerkleTree()
+        
+        for tx in transactions:
+            tx_string = json.dumps(tx, sort_keys=True) 
+            tx_hex = tx_string.encode('utf-8').hex()
+            mt.add_leaf(tx_hex)  
+            
+        mt.make_tree() 
+        return mt.generate_merkle_root()  
+    
+
+    def dpos_consensus(self):
+        validators = list(self.witnesses.keys())
+        selected_validator = random.choice(validators)# For illustration purposes
+        return selected_validator
+    
+   
 
     def add_transaction(self, manufacturer, distributor, client, product, amount):
         self.current_transactions.append({
@@ -83,11 +116,10 @@ class SupplyChainBlockchain:
             'amount': amount,
             'timestamps': {"received_by_distributor": time.time(), "dispatched": time.time(), "received_by_client": time.time()}
         })
+
+        self.unverified_transactions.append(self.current_transactions)
         return self.last_block['index'] + 1
 
-    def generate_merkle_root(self, transactions):
-      mt=MerkleTree()
-      return mt.generate_merkle_root()
 
 
     def generate_qr_code(self, transaction, file_path='qr_code.png'):
@@ -130,7 +162,8 @@ class SupplyChainBlockchain:
             self.delegates[participant] = 0
         for _, value in self.stakers.items():
             candidate,_ = random.choice(list(self.stakers.items()))
-            length = len(value['product'])
+            length = len(value['property']) if 'property' in value else 0
+
             x = length*random.randint(0, length)
             self.delegates[candidate] += x  
 
