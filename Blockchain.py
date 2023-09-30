@@ -71,7 +71,8 @@ class SupplyChainBlockchain:
         self.chain.append(block)
         return block
 
-
+    def confirm_deivery(self,distributor, client):
+        self.deliveries_in_progress.pop(distributor,None)
 
     def add_transaction(self, manufacturer, distributor, client, product, amount):
         self.current_transactions.append({
