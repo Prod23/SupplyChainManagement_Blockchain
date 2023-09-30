@@ -214,4 +214,22 @@ Generates the following message when scanned:
 
 ## Feature -5 
 
+### Preventing Double Spending
+At one time, the distributor can distribute a product to a dedicated client. Once
+the transaction is confirmed by both the distributor and the consumer, then only
+the next delivery can be taken by him/her.
+
+<img width="920" alt="image" src="https://github.com/Prod23/SupplyChainManagement_Blockchain/assets/73677045/cc352fed-a402-4e5a-bf7d-cb29bd07dfa3">
+
+<br>
+<br>
+Soon after Distributor1 tries to initiate a transaction with other client, known as <h3>double spending</h3> And hence, that transaction should be rejected. Here's the implementation for the same: 
+<br>
+<br>
+<img width="935" alt="image" src="https://github.com/Prod23/SupplyChainManagement_Blockchain/assets/73677045/ed6dc9f3-be39-4d7c-a4ed-cc0d35ad424b">
+
+
+
+
+
 ## Feature -6 
