@@ -2,7 +2,7 @@
 
 Implementation of Delegated Proof of Stake(DPoS) consensus algorithm
 
-## Team Members (Group 26)
+## Team Members (Group 10)
 <ol>
   <li>Hritik Raj (2020B4AA0980H) </li>
   <li>RishiRaj ( ) </li>
