@@ -1,135 +1,132 @@
+
+#Importing libraries.
 import hashlib
-from sys import displayhook
 from datetime import datetime
 import json
 import random
-from tkinter import Image
 import qrcode
 from merkleTree import MerkleTree
 
-
 class SupplyChainBlockchain:
     def __init__(self):
-        self.chain = [] 
+        self.chain = []
         self.unverified_transactions = []
         self.current_transactions = []
         self.transaction_history = dict()
-        
-        self.chain=[] #to store the chain
-
-        self.create_genesis_block(genesis_block= True) #genesis block, contains no transactions
-        
-        self.participants = dict()
-        
+        self.chain = []
+        self.create_genesis_block(genesis_block=True)
+        self.participants = dict()  # Define participants attribute here
         self.deliveries_in_progress = {}
-        
         self.disputes = []
-        
-        self.votes=[]
+        self.votes = []
+        self.digitalSignature = False  # Flag to indicate digital signature status
+        self.delegates = dict()
+        self.stakers = dict()
+        self.witnesses = dict()
 
-        self.delegates=dict()
-
-        self.stakers=dict()
-
-        self.witnesses=dict()
-
-
+    # Initialize participants
     def participant(self, participants):
         self.participants.update(participants)
-        print(self.participants)
 
-    def add_staker(self,stakers):
+    # Add stakers
+    def add_staker(self, stakers):
         self.stakers.update(stakers)
-    
 
-    def create_genesis_block(self,genesis_block=True):
-        
+    # Create a genesis block for the blockchain
+    def create_genesis_block(self, genesis_block=True):
         if genesis_block:
-                    
             p_hash = hashlib.sha256(datetime.now().strftime('%Y-%m-%d %H:%M:%S').encode()).hexdigest()
             m_root = hashlib.sha256("genesis".encode()).hexdigest()
             block = {
-            'index': len(self.chain),
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'transactions': None,
-            'previous_hash': p_hash,
-            'merkle_root': m_root,
-        }
-        self.chain.append(block)
-        return block
+                'index': len(self.chain),
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'transactions': None,
+                'previous_hash': p_hash,
+                'merkle_root': m_root,
+            }
+            self.chain.append(block)
+            return block
 
-    def create_block(self, previous_hash=None,genesis_block=False):
-        
-       
+    # Create a new block in the blockchain
+    def create_block(self, previous_hash=None, genesis_block=False):
         if not genesis_block:
-            validator = self.dpos_consensus()  # Decide who gets to create the block
-       
-        else: 
-            validator=None
+            validator = self.dpos_consensus()
+        else:
+            validator = None
         block = {
             'index': len(self.chain) + 1,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'transactions': self.current_transactions,
-            'validator': validator,  # The entity who added the block
+            'validator': validator,
             'previous_hash': self.prev_hash(self.chain[-1]),
             'merkle_root': self.generate_merkle_root(self.current_transactions),
         }
-
         self.current_transactions = []
-        self.deliveries_in_progress=[]
+        self.deliveries_in_progress = []
         self.chain.append(block)
-        self.unverified_transactions=[]
+        self.unverified_transactions = []
         return block
-    
-    
+
+    # Confirm transactions in the blockchain
     def confirm_transactions(self):
         last_block = self.last_block
         transactions = last_block['transactions']
-
         for tx in transactions:
             d = tx['distributor']
             c = tx['client']
-
             if d in self.deliveries_in_progress and self.deliveries_in_progress[d] == c:
                 self.confirm_delivery(d, c)
-                
-    def confirm_deivery(self,distributor, client):
-        self.deliveries_in_progress.pop(distributor,None)
 
+    # Confirm delivery of a product
+    def confirm_delivery(self, distributor, client):
+        self.deliveries_in_progress.pop(distributor, None)
+
+    # Generate the Merkle root of transactions
     def generate_merkle_root(self, transactions):
         mt = MerkleTree()
-        
         for tx in transactions:
-            tx_string = json.dumps(tx, sort_keys=True) 
+            tx_string = json.dumps(tx, sort_keys=True)
             tx_hex = tx_string.encode('utf-8').hex()
-            mt.add_leaf(tx_hex)  
-            
-        mt.make_tree() 
-        return mt.generate_merkle_root()  
-    
+            mt.add_leaf(tx_hex)
+        mt.make_tree()
+        return mt.generate_merkle_root()
 
+    # Implement DPoS consensus mechanism
     def dpos_consensus(self):
         validators = list(self.witnesses.keys())
-        selected_validator = random.choice(validators)# For illustration purposes
+        selected_validator = random.choice(validators)
         return selected_validator
-    
-   
 
+    # Add a new transaction to the blockchain
     def add_transaction(self, manufacturer, distributor, client, product, amount):
-        self.current_transactions.append({
+        self.digitalSignature = False  # Reset digital signature flag
+        manufacturer_to_distributor = {
             'manufacturer': manufacturer,
+            'distributor': distributor,
+            'product': product,
+            'amount': amount,
+            'timestamps': {
+                "sent_by_manufacturer": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "received_by_distributor": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        }
+        distributor_to_client = {
             'distributor': distributor,
             'client': client,
             'product': product,
             'amount': amount,
-            'timestamps': {"received_by_distributor": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "dispatched": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "received_by_client": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        })
-
+            'timestamps': {
+                "received_by_distributor": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "dispatched": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                "received_by_client": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        }
+        self.current_transactions.append(manufacturer_to_distributor)
+        self.current_transactions.append(distributor_to_client)
         self.unverified_transactions.append(self.current_transactions)
         return self.last_block['index'] + 1
 
-
-
+    # Generate a QR code for a transaction
     def generate_qr_code(self, transaction, file_path='qr_code.png'):
         qr = qrcode.QRCode(
             version=1,
@@ -137,68 +134,59 @@ class SupplyChainBlockchain:
             box_size=10,
             border=4,
         )
-
         qr.add_data(str(transaction))
         qr.make(fit=True)
-
         img = qr.make_image(fill_color="black", back_color="white")
-        img.save(file_path)  # Save the QR code as an image file
+        img.save(file_path)
 
-        # Display
-        displayhook(Image(filename=file_path))
-
-
-
+    # Resolve a dispute and identify the liar
     def resolve_dispute(self, dispute):
-      liar = None
-      client_id = dispute['client_id']
-      distributor_id = dispute['distributor_id']
+        liar = None
+        client_id = dispute['client_id']
+        distributor_id = dispute['distributor_id']
+        if dispute['client_claim'] != dispute['distributor_claim']:
+            if dispute['client_claim'] is False:
+                liar = client_id
+            else:
+                liar = distributor_id
+            self.entities[liar]['amount'] -= dispute['penalty']
+        return self.digitalSignature  # Return the digital signature flag
 
-      if dispute['client_claim'] != dispute['distributor_claim']:
-          if dispute['client_claim'] is False:
-              liar = client_id
-          else:
-              liar = distributor_id
-          self.entities[liar]['amount'] -= dispute['penalty']
-      return liar
-
-
-
+    # Implement DPoS voting
     def dpos_vote(self):
         self.stakers = self.participants
         for participant, _ in self.stakers.items():
             self.delegates[participant] = 0
         for _, value in self.stakers.items():
-            candidate,_ = random.choice(list(self.stakers.items()))
+            candidate, _ = random.choice(list(self.stakers.items()))
             length = len(value['property']) if 'property' in value else 0
+            x = length * random.randint(0, length)
+            self.delegates[candidate] += x
 
-            x = length*random.randint(0, length)
-            self.delegates[candidate] += x  
-
+    # Get the result of DPoS consensus
     def dpos_result(self):
         print(self.delegates)
-        self.delegates = dict(sorted(self.delegates.items(), key = lambda kv: (kv[1], kv[0]), reverse=True))
-
+        self.delegates = dict(sorted(self.delegates.items(), key=lambda kv: (kv[1], kv[0]), reverse=True))
         self.witnesses = dict(list(self.delegates.items())[0:3])
-        print(self.witnesses)
 
-
+    # Calculate the Merkle root hash of a block
     @staticmethod
     def hash(block):
-            transactions = block['transactions']
-            transactions.append(block['previous_hash'])
-            print(transactions)
-            mt = MerkleTree()
-            for transaction in transactions:
-                mt.add_leaf(transaction)
-            mt.make_tree()
-            return mt.generate_merkle_root()
-    
+        transactions = block['transactions']
+        if transactions is None:
+            transactions = []  # Initialize transactions as an empty list if it is None
+        transactions.append(block['previous_hash'])
+        mt = MerkleTree()
+        for transaction in transactions:
+            mt.add_leaf(transaction)
+        mt.make_tree()
+        return mt.generate_merkle_root()
+
+    # Get the previous block's Merkle root hash
     def prev_hash(self, block):
         return block['merkle_root']
 
-
-
+    # Get the last block in the blockchain
     @property
     def last_block(self):
         return self.chain[-1]
