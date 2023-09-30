@@ -172,6 +172,10 @@ Have used **SHA-256** as our hash function. Made use of methods like:
 
 ### Mining the Block
 
+<img width="800px" alt="image" src="https://github.com/Prod23/SupplyChainManagement_Blockchain/assets/73677045/440738fa-ff6e-48bf-aa4d-088317554d5f">
+
+
+
 
 ## Feature -4 
 
@@ -186,7 +190,7 @@ This generates the qrcode giving us the status of the transaction. Here's a samp
 <img  src="./Images/qr_code.png" width = 134px height = 134px>
 
 Generates the following message when scanned:
-``` json
+``` 
 {
     'manufacturer': 'Manufacturer1',
     'distributor': 'd2',
