@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 blockchain = SupplyChainBlockchain()
 
+
 @app.route("/add/users",methods=['POST'])
 def add_users():
     participants = request.get_json()
@@ -132,6 +133,31 @@ def remove_staker():
     }      
     return jsonify(response), 201
 
+
+@app.route("/mine",methods=['GET'])
+def mine_block():
+    if len(blockchain.unverified_transactions)>=2:
+        block = blockchain.create_block()
+
+        response={
+            'message':'New block Mined!',
+            'index':block['index'],
+            'timestamp':block['timestamp'],
+            'transactions': block['transactions'],
+            'merkle_root': block['merkle_root'],
+            'previous_hash': block['previous_hash']
+
+        }
+        print(len(blockchain.unverified_transactions))
+        return jsonify(response), 200
+    
+    else:
+        response = {
+                'message' : 'Not enough transactions to mine a new block and add to chain!'
+            }
+        print(len(blockchain.unverified_transactions))
+        return jsonify(response), 400
+    
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
