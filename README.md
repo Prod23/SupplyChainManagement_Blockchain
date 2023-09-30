@@ -234,11 +234,10 @@ Soon after Distributor1 tries to initiate a transaction with other client, known
 
 ## Feature -6 
 
-Certainly! Below is a sample text that you can include in your README file to explain the dispute resolution process using digital signatures in your Supply Chain Blockchain application:
 
----
 
-## Supply Chain Blockchain: Dispute Resolution
+
+### Supply Chain Blockchain: Dispute Resolution
 
 In our Supply Chain Blockchain application, we have implemented a robust dispute resolution mechanism to handle cases where discrepancies arise between distributors and clients regarding the completion of transactions.
 
