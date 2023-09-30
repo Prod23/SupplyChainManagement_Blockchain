@@ -1,28 +1,26 @@
+#importing necessary libraries
 from flask import Flask, jsonify,redirect, request, send_file, url_for
 import json
 from django.http import response
 from blockchain import SupplyChainBlockchain
 
-
+#intitializing flask
 app = Flask(__name__)
-
 blockchain = SupplyChainBlockchain()
 
 
+#api call for adding a users.
 @app.route("/add/users",methods=['POST'])
 def add_users():
     participants = request.get_json()
     blockchain.participant(participants)
-
     response={
         'message' : 'the following participants have been added',
         'participants': participants
-        
     }
-
-    # print(blockchain.participants)
     return jsonify(response),200
 
+#API call for listing the users added.
 @app.route("/users")
 def show_users():
     participants = blockchain.participants
@@ -32,12 +30,12 @@ def show_users():
 
     return jsonify(response),200
 
-
+#API call for generating the qrcode of product status of the latest transaction.
 @app.route('/qrcode')
 def generate_qr_code():
     if not blockchain.current_transactions: 
         return {"error": "No current transactions available"}, 400
-    current_transaction = blockchain.current_transactions[-1]  # Gets the last transaction. Modify as per your use case.
+    current_transaction = blockchain.current_transactions[-1]  # Gets the last transaction.
 
     file_path = 'qr_code.png'
     blockchain.generate_qr_code(current_transaction, file_path)
@@ -45,6 +43,7 @@ def generate_qr_code():
     return send_file(file_path, mimetype='image/png', as_attachment=True, download_name='qr_code.png')
 
 
+#API call for adding a transaction
 @app.route("/add/transaction",methods=['POST'])
 def add_transaction():
     transaction_data = request.json
@@ -53,9 +52,6 @@ def add_transaction():
     distributor = transaction_data.get('distributor')
     distributor_data = blockchain.participants[distributor]
     
-    
-    if not distributor or not product or not client:
-        return jsonify("Incomplete transaction data"), 400
     if distributor not in blockchain.participants:
         return jsonify({"error": "Distributor does not exist"}), 400  # Use 400 for client errors
     
@@ -71,6 +67,7 @@ def add_transaction():
         return jsonify("Distributor does not own the mentioned properties"),201
 
 
+#API call for generating the blockchain and listing the blocks with transactions.
 @app.route("/chain/",methods=['GET'])
 def get_chain():
     response={
@@ -82,6 +79,7 @@ def get_chain():
     return jsonify(response),200
 
 
+#API call for the voting process.
 @app.route("/voting",methods=['GET'])
 def voting():
     if port == 5001:
@@ -101,6 +99,7 @@ def voting():
 
         return jsonify(response),200
 
+#API call for finding out the witnesses.
 @app.route("/witnesses/",methods=['GET'])
 def get_witnesses():
     response={
@@ -109,7 +108,7 @@ def get_witnesses():
     }
     return jsonify(response),200
 
-
+#route for adding a staker in the blockchain.
 @app.route("/add/staker",methods=['POST'])
 def add_staker():
     stakers = request.json
@@ -121,6 +120,8 @@ def add_staker():
 
     return jsonify(response), 201
 
+
+#route for removing a staker from the blockchain.
 @app.route("/remove/staker",methods=['post'])
 def remove_staker():
     staker = request.json
@@ -134,11 +135,26 @@ def remove_staker():
     return jsonify(response), 201
 
 
+#route for resolving any disputes.
+@app.route("/dispute",methods=['GET'])
+def dispute():
+
+    if blockchain.digitalSignature:
+        response={
+            'message':'No disputes'
+        }
+    else:
+        response={
+            'message':'There is a dispute'
+        }
+    return jsonify(response),200    
+
+#API call for mining a block.
 @app.route("/mine",methods=['GET'])
 def mine_block():
     if len(blockchain.unverified_transactions)>=2:
         block = blockchain.create_block()
-
+        blockchain.digitalSignature = True
         response={
             'message':'New block Mined!',
             'index':block['index'],
