@@ -154,10 +154,26 @@ Here, the code sorts the self.delegates dictionary based on the vote counts in d
 }
 
 ```
+## Feature -3
+
+### Merkle Tree
+
+We have implemented Merkle tree in the 
+[MerkleTree()](https://github.com/Prod23/SupplyChainManagement_Blockchain/blob/3e0fd692c2e10e97614b03d5c97ffa07bbfcec46/MerkleTree.py#L5C12-L5C12)
+
+Have used **SHA-256** as our hash function. Made use of methods like:
+<ul>
+  <li>add_leaf</li>
+  <li>reset_tree</li>
+  <li>calculate_next_level</li>
+  <li>generate-merkle-root</li>
+</ul>
 
 
+### Mining the Block
 
-## Feature -3 
+
+## Feature -4 
 
 ### QR-Code
 A QR for the same has been implemented when scanned tells about the product status of the current transaction.
@@ -188,7 +204,7 @@ Generates the following message when scanned:
 
 
 
-## Feature -4 
+
 
 ## Feature -5 
 
