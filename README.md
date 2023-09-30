@@ -233,3 +233,46 @@ Soon after Distributor1 tries to initiate a transaction with other client, known
 
 
 ## Feature -6 
+
+Certainly! Below is a sample text that you can include in your README file to explain the dispute resolution process using digital signatures in your Supply Chain Blockchain application:
+
+---
+
+## Supply Chain Blockchain: Dispute Resolution
+
+In our Supply Chain Blockchain application, we have implemented a robust dispute resolution mechanism to handle cases where discrepancies arise between distributors and clients regarding the completion of transactions.
+
+### How it Works:
+
+#### 1. Transaction Confirmation via Digital Signatures:
+
+- **Distributor's Responsibility:**
+  - When a distributor dispatches a product, they generate a digital signature using their private key.
+  - This digital signature is attached to the transaction data, indicating that the product has been dispatched by the distributor.
+
+- **Client's Confirmation:**
+  - When the client receives the product, they must scan the QR code associated with the transaction.
+  - Scanning the QR code triggers the confirmation process.
+  - If the client successfully scans the QR code, the `digitalSignature` flag associated with the transaction is set to `True`.
+  - The `digitalSignature` flag serves as a confirmation that the client has received the product and verifies the authenticity of the transaction.
+
+#### 2. Dispute Resolution:
+
+- **Distributor Claims Transaction Completion:**
+  - If the distributor claims that the transaction is complete but the `digitalSignature` flag is not set to `True`, the distributor is identified as the liar.
+  - The distributor's claim is invalidated, and appropriate actions can be taken, such as deductions from the security deposit.
+
+- **Client Denies Receiving the Product:**
+  - If the client denies receiving the product but the `digitalSignature` flag is set to `True`, the client is identified as the liar.
+  - The client's denial is invalidated, and necessary actions can be taken, such as deductions from the security deposit.
+
+### Why Digital Signatures Matter:
+
+Digital signatures ensure the integrity and authenticity of transaction data. By signing the transaction with their private key, both the distributor and the client provide cryptographic proof of their actions. This cryptographic proof serves as a reliable and secure way to confirm the completion of transactions, making the dispute resolution process transparent and trustworthy.
+
+By leveraging digital signatures, our Supply Chain Blockchain application maintains the integrity of the supply chain, minimizes disputes, and ensures fair and reliable transactions for all participants.
+
+--- 
+
+Feel free to customize and expand this explanation based on the specific details of your implementation and the audience you are addressing in your README file.
+
