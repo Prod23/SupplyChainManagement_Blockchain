@@ -129,6 +129,7 @@ Here, it initializes a delegates where each participant is initially assigned a 
 
 This loop goes through each participant (represented by value) in self.stakers. For each participant, it selects a random candidate from the list of participants (including themselves) and calculates a vote count (x) based on the length of the participant's 'product' attribute. The vote count is then added to the selected candidate's vote count in the self.delegates dictionary. This loop effectively distributes votes randomly among the participants.
 
+
 ```python
 def dpos_result(self):
     print(self.delegates)
