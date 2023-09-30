@@ -37,6 +37,59 @@ This assignment focuses on implementing blockchain for Supply Chain Management. 
 
 ## Feature -1 
 
+### Register an entity
+
+API calling begins with adding a user of the format:
+
+``` json
+{
+    "message": "the following participants have been added",
+    "participants": {
+        "M1": {
+            "amount": 1000,
+            "id": "M1",
+            "name": "Manufacturer1",
+            "type": "Manufacturer"
+        },
+        "c1": {
+            "amount": 1000,
+            "id": "C1",
+            "name": "Client1",
+            "type": "client"
+        },
+        "c2": {
+            "amount": 1000,
+            "id": "C2",
+            "name": "Client2",
+            "type": "client"
+        },
+        "d1": {
+            "amount": 1000,
+            "id": "D1",
+            "name": "Distributor1",
+            "property": [
+                "wood",
+                "sandlewood"
+            ],
+            "type": "distributor"
+        },
+        "d2": {
+            "amount": 1000,
+            "id": "D2",
+            "name": "Distributor2",
+            "property": [
+                "normal-chair",
+                "office-chair"
+            ],
+            "type": "distributor"
+        }
+    }
+}
+```
+
+where there is only one manufacturer for the network, along with multiple distributors and clients as nodes. Each node has to be security deposit of 1000 (amount) to the trusted third party in the network.
+
+
 ## Feature -2 
 
 ### DPoS 
@@ -88,25 +141,40 @@ def dpos_result(self):
 Here, the code sorts the self.delegates dictionary based on the vote counts in descending order. It converts the sorted dictionary back into a regular dictionary and selects the top three participants (witnesses) with the highest vote counts and stores them in the self.witnesses dictionary. 
 
 
+``` json
+{
+    "message": "Voting has been successfull and as follows: ",
+    "nodes:": {
+        "M1": 4,
+        "c1": 0,
+        "c2": 0,
+        "d1": 2,
+        "d2": 1
+    }
+}
+
+```
+
+
 
 ## Feature -3 
 
 ### QR-Code
 A QR for the same has been implemented when scanned tells about the product status of the current transaction.
 
-```
-localhost:5001/qrcode
+``` 
+http://localhost:5001/qrcode
 ```
 This generates the qrcode giving us the status of the transaction. Here's a sample qrcode generated.
 
-<img src=" https://github.com/Prod23/SupplyChainManagement_Blockchain/Images/qr_code.png" width = 114px height = 114px>  
+<img  src="./Images/qr_code.png" width = 134px height = 134px>
 
 Generates the following message when scanned:
-```
+``` 
 {
     'manufacturer': 'Manufacturer1', 'distributor': 'd2',
     'client': 'Client1',
-     'product': 'normal-chair',
+    'product': 'normal-chair',
     'amount': 400,
     'timestamps':
           {
