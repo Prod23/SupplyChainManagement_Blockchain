@@ -18,6 +18,17 @@ def add_users():
         'participants': participants
         
     }
+
+    # print(blockchain.participants)
+    return jsonify(response),200
+
+@app.route("/users")
+def show_users():
+    participants = blockchain.participants
+    response={
+        'participants':participants
+    }
+
     return jsonify(response),200
 
 
@@ -35,15 +46,26 @@ def generate_qr_code():
 
 @app.route("/add/transaction",methods=['POST'])
 def add_transaction():
-    transaction = request.json()
-    client = transaction['client']
-    distributor = transaction['distributor']
-    manufacturer = transaction['manufacturer']
-    product=transaction['product']
-
-    if blockchain.participants[distributor]['property'].count(property) > 0:
-        blockchain.add_transaction(transaction)
-        return jsonify("Transaction completed"),201
+    transaction_data = request.json
+    client = transaction_data.get('client')
+    product=transaction_data.get('product')
+    distributor = transaction_data.get('distributor')
+    distributor_data = blockchain.participants[distributor]
+    
+    
+    if not distributor or not product or not client:
+        return jsonify("Incomplete transaction data"), 400
+    if distributor not in blockchain.participants:
+        return jsonify({"error": "Distributor does not exist"}), 400  # Use 400 for client errors
+    
+    if distributor in blockchain.deliveries_in_progress:
+        return jsonify("Distributor is currently engaged in another transaction"), 400
+    
+    if 'property' in distributor_data and product in distributor_data['property']:
+        blockchain.add_transaction(manufacturer=transaction_data.get('manufacturer', ''), distributor=distributor, client=client, product=product, amount=transaction_data.get('amount', 0))
+        blockchain.deliveries_in_progress[distributor] = client  # Mark the distributor as engaged in a delivery
+        return jsonify("Transaction added"),200
+    
     else:
         return jsonify("Distributor does not own the mentioned properties"),201
 
@@ -89,16 +111,18 @@ def get_witnesses():
 
 @app.route("/add/staker",methods=['POST'])
 def add_staker():
-    stakers = request.json()
+    stakers = request.json
     blockchain.add_staker(stakers)
     response={
         'message':'Kudos! the stakers have been added.',
         'stakers':stakers
     }
 
+    return jsonify(response), 201
+
 @app.route("/remove/staker",methods=['post'])
 def remove_staker():
-    staker = request.json()
+    staker = request.json
 
     if blockchain.stakers.has_key(staker):
         blockchain.staker.pop(staker, 'the user is no more a staker')
