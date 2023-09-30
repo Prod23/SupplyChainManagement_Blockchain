@@ -1,6 +1,6 @@
 import hashlib
 from sys import displayhook
-import time
+from datetime import datetime
 import json
 import random
 from tkinter import Image
@@ -17,7 +17,7 @@ class SupplyChainBlockchain:
         
         self.chain=[] #to store the chain
 
-        self.create_block("0",genesis_block= True) #genesis block, contains no transactions
+        self.create_genesis_block(genesis_block= True) #genesis block, contains no transactions
         
         self.participants = dict()
         
@@ -33,37 +33,45 @@ class SupplyChainBlockchain:
 
         self.witnesses=dict()
 
-    # def add_users(self,participants):
-    #     self.participants.update(participants)
-    #     print(self.participants)
-
 
     def participant(self, participants):
-            # self.participants[name] = { "type": type_, "amount": amount, "products": [] }
-            # if type_ == "distributor":
-            #   # print(id[1])
-            #   # index=int(id[1])
-            #   self.votes.append({id:0})
-              # print(id[1])
         self.participants.update(participants)
         print(self.participants)
 
     def add_staker(self,stakers):
         self.stakers.update(stakers)
+    
 
+    def create_genesis_block(self,genesis_block=True):
+        
+        if genesis_block:
+                    
+            p_hash = hashlib.sha256(datetime.now().strftime('%Y-%m-%d %H:%M:%S').encode()).hexdigest()
+            m_root = hashlib.sha256("genesis".encode()).hexdigest()
+            block = {
+            'index': len(self.chain),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'transactions': None,
+            'previous_hash': p_hash,
+            'merkle_root': m_root,
+        }
+        self.chain.append(block)
+        return block
 
     def create_block(self, previous_hash=None,genesis_block=False):
         
+       
         if not genesis_block:
-          validator = self.dpos_consensus()  # Decide who gets to create the block
-        else:
-          validator=None
+            validator = self.dpos_consensus()  # Decide who gets to create the block
+       
+        else: 
+            validator=None
         block = {
             'index': len(self.chain) + 1,
-            'timestamp': time.time(),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'transactions': self.current_transactions,
             'validator': validator,  # The entity who added the block
-            'previous_hash': previous_hash or self.hash(self.chain[-1]),
+            'previous_hash': self.prev_hash(self.chain[-1]),
             'merkle_root': self.generate_merkle_root(self.current_transactions),
         }
 
@@ -114,7 +122,7 @@ class SupplyChainBlockchain:
             'client': client,
             'product': product,
             'amount': amount,
-            'timestamps': {"received_by_distributor": time.time(), "dispatched": time.time(), "received_by_client": time.time()}
+            'timestamps': {"received_by_distributor": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "dispatched": datetime.now().strftime('%Y-%m-%d %H:%M:%S'), "received_by_client": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         })
 
         self.unverified_transactions.append(self.current_transactions)
@@ -185,6 +193,11 @@ class SupplyChainBlockchain:
                 mt.add_leaf(transaction)
             mt.make_tree()
             return mt.generate_merkle_root()
+    
+    def prev_hash(self, block):
+        return block['merkle_root']
+
+
 
     @property
     def last_block(self):
