@@ -39,7 +39,86 @@ This assignment focuses on implementing blockchain for Supply Chain Management. 
 
 ## Feature -2 
 
+### DPoS 
+The delegated proof of stake Consensus Algorithm has been implemented in the blockchain.py as the following methods
+[Dpos_vote()](https://github.com/Prod23/SupplyChainManagement_Blockchain/blob/4bed1b209cee0a5132f135d2b10ed2fa6714a4c6/Blockchain.py#L127)
+[Dpos_result()](https://github.com/Prod23/SupplyChainManagement_Blockchain/blob/4bed1b209cee0a5132f135d2b10ed2fa6714a4c6/Blockchain.py#L137C4-L137C27)
+
+<h3>DPoS Implementation</h3>
+
+```python
+def dpos_vote(self):
+    self.stakers = self.participants
+
+```
+This function begins by assigning the self.participants to self.stakers. Participants is a dictionary containing information about participants in the DPoS consensus, and stakers is used to represent the participants who will participate in voting.
+
+```python
+
+    for participant, _ in self.stakers.items():
+        self.delegates[participant] = 0
+
+```
+
+Here, it initializes a delegates where each participant is initially assigned a vote count of 0. This dictionary will be used to keep track of how many votes each participant receives.
+
+
+```python
+
+    for _, value in self.stakers.items():
+        candidate, _ = random.choice(list(self.stakers.items()))
+        length = len(value['product'])
+        x = length * random.randint(0, length)
+        self.delegates[candidate] += x
+
+
+```
+
+This loop goes through each participant (represented by value) in self.stakers. For each participant, it selects a random candidate from the list of participants (including themselves) and calculates a vote count (x) based on the length of the participant's 'product' attribute. The vote count is then added to the selected candidate's vote count in the self.delegates dictionary. This loop effectively distributes votes randomly among the participants.
+
+```python
+def dpos_result(self):
+    print(self.delegates)
+    self.delegates = dict(sorted(self.delegates.items(), key=lambda kv: (kv[1], kv[0]), reverse=True))
+    self.witnesses = dict(list(self.delegates.items())[0:3])
+    print(self.witnesses)
+
+```
+
+Here, the code sorts the self.delegates dictionary based on the vote counts in descending order. It converts the sorted dictionary back into a regular dictionary and selects the top three participants (witnesses) with the highest vote counts and stores them in the self.witnesses dictionary. 
+
+
+
 ## Feature -3 
+
+### QR-Code
+A QR for the same has been implemented when scanned tells about the product status of the current transaction.
+
+```
+localhost:5001/qrcode
+```
+This generates the qrcode giving us the status of the transaction. Here's a sample qrcode generated.
+
+<img src=" https://github.com/Prod23/SupplyChainManagement_Blockchain/Images/qr_code.png" width = 114px height = 114px>  
+
+Generates the following message when scanned:
+```
+{
+    'manufacturer': 'Manufacturer1', 'distributor': 'd2',
+    'client': 'Client1',
+     'product': 'normal-chair',
+    'amount': 400,
+    'timestamps':
+          {
+            'received_by_distributor': 1696061718.8122292,
+            'dispatched': 1696061718.8122292,
+            'received_by_client': 1696061718.8122292
+          }
+}
+
+```
+
+
 
 ## Feature -4 
 
