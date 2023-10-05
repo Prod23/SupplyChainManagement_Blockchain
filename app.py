@@ -3,6 +3,7 @@ from flask import Flask, jsonify,redirect, request, send_file, url_for
 import json
 from django.http import response
 from blockchain import SupplyChainBlockchain
+import uuid
 
 #intitializing flask
 app = Flask(__name__)
@@ -13,6 +14,10 @@ blockchain = SupplyChainBlockchain()
 @app.route("/add/users",methods=['POST'])
 def add_users():
     participants = request.get_json()
+    for key, value in participants.items():
+        if value["type"] == "distributor":
+            value["private_key"] = str(uuid.uuid4()).replace("-", "")
+
     blockchain.participant(participants)
     response={
         'message' : 'the following participants have been added',
@@ -31,7 +36,7 @@ def show_users():
     return jsonify(response),200
 
 #API call for generating the qrcode of product status of the latest transaction.
-@app.route('/qrcode')
+@app.route('/qrcode',methods=['GET'])
 def generate_qr_code():
     if not blockchain.current_transactions: 
         return {"error": "No current transactions available"}, 400
