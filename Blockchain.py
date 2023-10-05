@@ -9,6 +9,7 @@ from merkleTree import MerkleTree
 
 class SupplyChainBlockchain:
     def __init__(self):
+        self.nonce = random.randint(100,999)
         self.chain = []
         self.unverified_transactions = []
         self.current_transactions = []
@@ -26,6 +27,7 @@ class SupplyChainBlockchain:
 
     # Initialize participants
     def participant(self, participants):
+        
         self.participants.update(participants)
 
     # Add stakers
@@ -43,7 +45,10 @@ class SupplyChainBlockchain:
                 'transactions': None,
                 'previous_hash': p_hash,
                 'merkle_root': m_root,
+                'nonce':self.nonce
+                
             }
+
             self.chain.append(block)
             return block
 
@@ -54,15 +59,16 @@ class SupplyChainBlockchain:
         else:
             validator = None
         block = {
-            'index': len(self.chain) + 1,
+            'index': len(self.chain) ,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'transactions': self.current_transactions,
             'validator': validator,
             'previous_hash': self.prev_hash(self.chain[-1]),
             'merkle_root': self.generate_merkle_root(self.current_transactions),
+            'nonce':self.nonce
         }
         self.current_transactions = []
-        self.deliveries_in_progress = []
+        self.deliveries_in_progress = {}
         self.chain.append(block)
         self.unverified_transactions = []
         return block
@@ -121,8 +127,11 @@ class SupplyChainBlockchain:
                 "received_by_client": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             }
         }
-        self.current_transactions.append(manufacturer_to_distributor)
-        self.current_transactions.append(distributor_to_client)
+        if client=="": 
+            self.current_transactions.append(manufacturer_to_distributor)
+        else : 
+            self.current_transactions.append(distributor_to_client)
+        self.nonce = random.randint(100,999)
         self.unverified_transactions.append(self.current_transactions)
         return self.last_block['index'] + 1
 
@@ -172,19 +181,17 @@ class SupplyChainBlockchain:
     # Calculate the Merkle root hash of a block
     @staticmethod
     def hash(block):
-        transactions = block['transactions']
-        if transactions is None:
-            transactions = []  # Initialize transactions as an empty list if it is None
-        transactions.append(block['previous_hash'])
-        mt = MerkleTree()
-        for transaction in transactions:
-            mt.add_leaf(transaction)
-        mt.make_tree()
-        return mt.generate_merkle_root()
+        block_string = json.dumps({
+            'timestamp': block['timestamp'],
+            'previous_hash': block['previous_hash'],
+            'merkle_root': block['merkle_root'],
+            'nonce': block['nonce']  # Include nonce in the block string for hashing
+        }, sort_keys=True).encode()
+        return hashlib.sha256(block_string).hexdigest()
 
     # Get the previous block's Merkle root hash
     def prev_hash(self, block):
-        return block['merkle_root']
+        return self.hash(block)
 
     # Get the last block in the blockchain
     @property
