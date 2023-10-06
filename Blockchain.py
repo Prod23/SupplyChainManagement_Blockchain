@@ -6,6 +6,14 @@ import json
 import random
 import qrcode
 from merkleTree import MerkleTree
+from crypto.Signature import pkcs1_15
+from crypto.Hash import SHA256
+from crypto.PublicKey import RSA
+
+
+
+
+
 
 class SupplyChainBlockchain:
     def __init__(self):
@@ -29,6 +37,30 @@ class SupplyChainBlockchain:
     def participant(self, participants):
         
         self.participants.update(participants)
+
+    def generate_signature(self,private_key, message):
+        key = RSA.import_key(private_key)
+        h = SHA256.new(message.encode())
+        signature = pkcs1_15.new(key).sign(h)
+        return signature.hex()
+    
+    def verify_signature(self,public_key, message, signature):
+        key = RSA.import_key(public_key)
+        h = SHA256.new(message.encode())
+        try:
+            pkcs1_15.new(key).verify(h, bytes.fromhex(signature))
+            return True
+        except (ValueError, TypeError):
+            return False
+    
+    # You'll have to modify the logic here based on your QR scanning implementation
+    def confirm_receipt(self,transaction_data, distributor_public_key):
+        signature = transaction_data.get("signature")
+        if not signature:
+            return False
+        data_without_signature = {key: val for key, val in transaction_data.items() if key != "signature"}
+        return self.verify_signature(distributor_public_key, json.dumps(data_without_signature), signature)
+
 
     # Add stakers
     def add_staker(self, stakers):
