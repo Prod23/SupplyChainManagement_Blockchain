@@ -4,6 +4,7 @@ import json
 from django.http import response
 from blockchain import SupplyChainBlockchain
 import uuid
+import random
 
 #intitializing flask
 app = Flask(__name__)
@@ -38,9 +39,9 @@ def show_users():
 #API call for generating the qrcode of product status of the latest transaction.
 @app.route('/qrcode',methods=['GET'])
 def generate_qr_code():
-    if not blockchain.current_transactions: 
+    if not blockchain.save_current_transactions: 
         return {"error": "No current transactions available"}, 400
-    current_transaction = blockchain.current_transactions[-1]  # Gets the last transaction.
+    current_transaction = blockchain.save_current_transactions[-1]  # Gets the last transaction.
 
     file_path = 'qr_code.png'
     blockchain.generate_qr_code(current_transaction, file_path)
@@ -66,9 +67,6 @@ def add_transaction():
     if 'property' in distributor_data and product in distributor_data['property']:
         blockchain.add_transaction(manufacturer=transaction_data.get('manufacturer', ''), distributor=distributor, client=client, product=product, amount=transaction_data.get('amount', 0))
         blockchain.deliveries_in_progress[distributor] = client  # Mark the distributor as engaged in a delivery
-        signature = blockchain.generate_signature(distributor_data["private_key"], json.dumps(transaction_data))
-        transaction_data["signature"] = signature
-
         return jsonify("Transaction added"),200
     
     else:
@@ -141,24 +139,31 @@ def remove_staker():
         'staker':staker
     }      
     return jsonify(response), 201
-
-
-#route for resolving any disputes.
-@app.route("/resolve_dispute", methods=['POST'])
-def resolve_dispute():
-    data = request.get_json()
-    distributor_claim = data.get("distributor_claim")
-    client_claim = data.get("client_claim")
-    
-    if distributor_claim != blockchain.digitalSignature:
-        # Distributor is the liar
-        return jsonify({"message": "Distributor is the liar"}), 400
-    elif client_claim != blockchain.digitalSignature:
-        # Client is the liar
-        return jsonify({"message": "Client is the liar"}), 400
-    else:
-        return jsonify({"message": "No disputes found"}), 200
   
+@app.route("/dispute",methods=['GET'])
+def dispute():
+    random_number = random.random()
+    print(blockchain.save_current_transactions)
+    responsible_member = "d1"
+    # for i in blockchain.save_current_transactions:
+    #     print(i[0]["distributor"])
+    if(random_number < 0.5):
+        responsible_member = blockchain.save_current_transactions[0][0]["distributor"]
+    else:
+        responsible_member = blockchain.save_current_transactions[0][0]["client"]
+    
+    if blockchain.digitalSignature:
+        response={
+            'message':'No disputes'
+        }
+    else:
+        response={
+            'message':'There is a dispute',
+            'Liar': responsible_member,
+            'Penalty': 0.2*blockchain.participants[responsible_member]["amount"]
+        }
+        blockchain.participants[responsible_member]["amount"] = 0.8*blockchain.participants[responsible_member]["amount"]
+    return jsonify(response),200
 
 #API call for mining a block.
 @app.route("/mine",methods=['GET'])
