@@ -66,6 +66,9 @@ def add_transaction():
     if 'property' in distributor_data and product in distributor_data['property']:
         blockchain.add_transaction(manufacturer=transaction_data.get('manufacturer', ''), distributor=distributor, client=client, product=product, amount=transaction_data.get('amount', 0))
         blockchain.deliveries_in_progress[distributor] = client  # Mark the distributor as engaged in a delivery
+        signature = blockchain.generate_signature(distributor_data["private_key"], json.dumps(transaction_data))
+        transaction_data["signature"] = signature
+
         return jsonify("Transaction added"),200
     
     else:
@@ -141,18 +144,21 @@ def remove_staker():
 
 
 #route for resolving any disputes.
-@app.route("/dispute",methods=['GET'])
-def dispute():
-
-    if blockchain.digitalSignature:
-        response={
-            'message':'No disputes'
-        }
+@app.route("/resolve_dispute", methods=['POST'])
+def resolve_dispute():
+    data = request.get_json()
+    distributor_claim = data.get("distributor_claim")
+    client_claim = data.get("client_claim")
+    
+    if distributor_claim != blockchain.digitalSignature:
+        # Distributor is the liar
+        return jsonify({"message": "Distributor is the liar"}), 400
+    elif client_claim != blockchain.digitalSignature:
+        # Client is the liar
+        return jsonify({"message": "Client is the liar"}), 400
     else:
-        response={
-            'message':'There is a dispute'
-        }
-    return jsonify(response),200    
+        return jsonify({"message": "No disputes found"}), 200
+  
 
 #API call for mining a block.
 @app.route("/mine",methods=['GET'])
