@@ -28,10 +28,10 @@ This assignment focuses on implementing blockchain for Supply Chain Management. 
 <li>/chain - displays the current blockchain of nodes</li >
 <li>/users - current nodes in the network</li>
 <li>/add/staker - adding a staker</li>
-<li>/remove/staker</li>
-<li>/witnesses</li>  
-<li>/qrcode</li>
-<li>/mine</li>
+<li>/remove/staker - removing a staker</li>
+<li>/witnesses - The final witnesses or delegates selected for mining the next block.</li>  
+<li>/qrcode - Generates the QR Code describing the product status of the lastest transaction.</li>
+<li>/mine - For mining the New Block.</li>
 </ul>
 
 
