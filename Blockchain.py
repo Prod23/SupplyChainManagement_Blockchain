@@ -6,13 +6,6 @@ import json
 import random
 import qrcode
 from merkleTree import MerkleTree
-from crypto.Signature import pkcs1_15
-from crypto.Hash import SHA256
-from crypto.PublicKey import RSA
-
-
-
-
 
 
 class SupplyChainBlockchain:
@@ -21,6 +14,7 @@ class SupplyChainBlockchain:
         self.chain = []
         self.unverified_transactions = []
         self.current_transactions = []
+        self.save_current_transactions = []
         self.transaction_history = dict()
         self.chain = []
         self.create_genesis_block(genesis_block=True)
@@ -37,30 +31,6 @@ class SupplyChainBlockchain:
     def participant(self, participants):
         
         self.participants.update(participants)
-
-    def generate_signature(self,private_key, message):
-        key = RSA.import_key(private_key)
-        h = SHA256.new(message.encode())
-        signature = pkcs1_15.new(key).sign(h)
-        return signature.hex()
-    
-    def verify_signature(self,public_key, message, signature):
-        key = RSA.import_key(public_key)
-        h = SHA256.new(message.encode())
-        try:
-            pkcs1_15.new(key).verify(h, bytes.fromhex(signature))
-            return True
-        except (ValueError, TypeError):
-            return False
-    
-    # You'll have to modify the logic here based on your QR scanning implementation
-    def confirm_receipt(self,transaction_data, distributor_public_key):
-        signature = transaction_data.get("signature")
-        if not signature:
-            return False
-        data_without_signature = {key: val for key, val in transaction_data.items() if key != "signature"}
-        return self.verify_signature(distributor_public_key, json.dumps(data_without_signature), signature)
-
 
     # Add stakers
     def add_staker(self, stakers):
@@ -99,6 +69,7 @@ class SupplyChainBlockchain:
             'merkle_root': self.generate_merkle_root(self.current_transactions),
             'nonce':self.nonce
         }
+        self.save_current_transactions.append(self.current_transactions)
         self.current_transactions = []
         self.deliveries_in_progress = {}
         self.chain.append(block)
@@ -165,6 +136,7 @@ class SupplyChainBlockchain:
             self.current_transactions.append(distributor_to_client)
         self.nonce = random.randint(100,999)
         self.unverified_transactions.append(self.current_transactions)
+        self.save_current_transactions.append(self.current_transactions)
         return self.last_block['index'] + 1
 
     # Generate a QR code for a transaction
@@ -196,12 +168,16 @@ class SupplyChainBlockchain:
     # Implement DPoS voting
     def dpos_vote(self):
         self.stakers = self.participants
+        eligible_to_delegate = False
         for participant, _ in self.stakers.items():
             self.delegates[participant] = 0
         for _, value in self.stakers.items():
             candidate, _ = random.choice(list(self.stakers.items()))
-            length = len(value['property']) if 'property' in value else 0
-            x = length * random.randint(0, length)
+            stake_vote = value['amount'] if 'amount' in value else 0
+            x = random.randint(0, stake_vote)
+            value['amount'] = value['amount']-x
+            if(x > 400):
+                eligible_to_delegate = True
             self.delegates[candidate] += x
 
     # Get the result of DPoS consensus
